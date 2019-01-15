@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<body>
+<title>Violation Reports for "legacy-image-formats" policy</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/feature-policy/experimental-features/resources/common.js"></script>
+<script>
+'use strict';
+
+const test_cases = [
+  {src: "/feature-policy/experimental-features/resources/image.svg", expect_violation: true},
+  {src: "/feature-policy/experimental-features/resources/image.jpg", expect_violation: true},
+  {src: "/feature-policy/experimental-features/resources/image.png", expect_violation: true},
+  {src: "/feature-policy/experimental-features/resources/image.gif", expect_violation: true},
+  {src: "/feature-policy/experimental-features/resources/image.bmp", expect_violation: false}
+];
+
+// A delay the test waits between setting an image source and verifying violation reports; the value
+// is arbitrarily chosen as the spec does not suggest a strong timing requirement for generating
+// reports (https://w3c.github.io/webappsec-feature-policy/#report-feature-policy-violation).
+const kReportDelay = 100;
+function wait_in_test(test) {
+  return new Promise( (r) => test.step_timeout(r, kReportDelay));
+}
+
+// Observer of "legacy-image-formats" violations.
+function ViolationObserver() {
+  var observed_violation = false;
+  const violation_observer = new ReportingObserver((reports) => {
+    reports.some((r) => {
+      if (r.body.featureId === "legacy-image-formats")
+        observed_violation = true;
+      return observed_violation;
+    });
+  });
+  violation_observer.observe();
+  this.did_observe_violation = () => observed_violation;
+}
+
+// Violation reports for various image types.
+test_cases.forEach( (t) => {
+  promise_test(async(instance) => {
+    const violation_observer = new ViolationObserver();
+    var img = document.createElement('IMG');
+    document.body.appendChild(img);
+    img.src = t.src;
+    await wait_in_test(instance);
+    assert_not_equals(
+      violation_observer.did_observe_violation(),
+      t.expect_violation,
+      "Unexpected violation result.");
+  },
+  `Ensure ${t.expect_violation ? 'no ' : ''}violation report is generated` +
+  ` for for image src=${t.src}.`);
+});
+</script>
+</body>
+
