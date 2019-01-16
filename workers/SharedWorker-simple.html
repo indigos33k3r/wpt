@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<title>Test simple shared worker construction case.</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id=log></div>
+<script>
+async_test(function(t) {
+    var worker = new SharedWorker('support/SharedWorkerCommon.js', 'name');
+    worker.port.postMessage("ping");
+    worker.port.onmessage = function(evt) {
+        assert_equals(evt.data, "ping");
+    }
+    t.done();
+});
+</script>

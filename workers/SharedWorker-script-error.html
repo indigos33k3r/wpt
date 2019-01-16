@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<title>Test SharedWorker script error handling functionality.</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id=log></div>
+<script>
+async_test(function(t) {
+    var worker = new SharedWorker("support/SharedWorkerScriptError.js");
+    // Shared workers should only invoke onerror for loading errors.
+    worker.onerror = function(evt) {
+        assert_unreached("FAIL: onerror invoked for a script error.");
+    }
+    worker.port.postMessage("unhandledError");
+    worker.port.onmessage = function(evt) {
+        assert_equals(evt.data, "SUCCESS: unhandled error generated");
+    }
+    t.done()
+}, 'Test script error unhandled.')
+
+async_test(function(t) {
+    var worker = new SharedWorker("support/SharedWorkerScriptError.js");
+    // Shared workers should only invoke onerror for loading errors.
+    worker.onerror = function(evt) {
+        assert_unreached("FAIL: onerror invoked for a script error.");
+    }
+    worker.port.postMessage("handledError");
+    worker.port.onmessage = function(evt) {
+        assert_equals(evt.data, "SUCCESS: error handled via onerror");
+    }
+    t.done();
+}, 'Test script error handled.');
+</script>
